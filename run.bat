@@ -35,7 +35,7 @@ if %errorlevel%==0 (
 echo Using: %PY%
 
 if not exist ".venv" (
-  echo Setting up (first run only)...
+  echo Setting up - first run only...
   %PY% -m venv .venv
   if not exist ".venv\Scripts\activate.bat" (
     echo.
@@ -76,8 +76,9 @@ echo (Close this window, or press Ctrl+C, to stop the server.)
 echo.
 
 REM Open the browser a couple seconds after the server has time to start,
-REM without blocking the server itself.
-start "" cmd /c "timeout /t 2 /nobreak >nul & start "" http://127.0.0.1:%PORT%/"
+REM without blocking the server itself. Uses explorer.exe to hand the URL
+REM to your default browser, which avoids nested-quote parsing problems.
+start "" /min cmd /c "timeout /t 2 /nobreak >nul && explorer http://127.0.0.1:%PORT%/"
 
 python app.py
 
