@@ -10,6 +10,23 @@
 
 ## Install & run
 
+### One-click launchers
+
+- **macOS**: double-click `run.command`
+- **Windows**: double-click `run.bat`
+- **Linux**: double-click `run.sh` (if your file manager is set to run
+  `.sh` files) or right-click → "Run in Terminal"; otherwise `./run.sh`
+  from a terminal
+
+These scripts create `.venv/` and install `requirements.txt` automatically
+the first time they're run (subsequent runs skip straight to starting the
+server, since `pip install` is a fast no-op when nothing changed), then
+launch `app.py` and open your default browser to the dashboard. They set
+`FLASK_DEBUG=0` by default. Override the port with an environment variable
+before launching, e.g. `PORT=8080 ./run.sh`.
+
+### Manual (any platform)
+
 ```bash
 # 1. clone / cd into the project
 cd Skin.club

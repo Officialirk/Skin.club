@@ -40,6 +40,20 @@ local CSV. No build step required.
 
 ## Quick start
 
+**One click:**
+
+- **macOS**: double-click `run.command`
+- **Windows**: double-click `run.bat`
+- **Linux**: double-click `run.sh` if your file manager runs `.sh` files
+  directly (or right-click → "Run in Terminal"); otherwise run `./run.sh`
+  from a terminal
+
+Each launcher creates a virtual environment and installs Flask on first
+run only, then starts the server and opens your browser to the dashboard
+automatically. Close the terminal window (or Ctrl+C) to stop it.
+
+**Manual / any platform:**
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
