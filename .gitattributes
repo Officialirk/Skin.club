@@ -1,0 +1,6 @@
+# Force consistent line endings regardless of each contributor's git
+# autocrlf setting, since these launcher scripts are OS-specific and
+# sensitive to line-ending format.
+*.bat text eol=crlf
+run.sh text eol=lf
+run.command text eol=lf

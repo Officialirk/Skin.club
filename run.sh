@@ -12,9 +12,34 @@
 # What it does: creates a virtual environment on first run, installs Flask
 # if needed, starts the app, and opens your browser to the dashboard.
 # Nothing here talks to Skin.Club or any other external service.
+#
+# This window stays open (waits for a keypress) when the script exits, on
+# both success and failure, so you can always read what happened. If it
+# still closes immediately for you, open Terminal yourself, cd into this
+# folder, and run: ./run.sh  -- that guarantees the window stays open.
+
+pause_on_exit() {
+  status=$?
+  echo
+  if [ $status -ne 0 ]; then
+    echo "Exited with an error (see above)."
+  else
+    echo "Server stopped."
+  fi
+  read -n 1 -s -r -p "Press any key to close this window..." || true
+  echo
+}
+trap pause_on_exit EXIT
 
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}")"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: python3 was not found on your PATH."
+  echo "Install Python 3.10+ from https://www.python.org/downloads/ (macOS)"
+  echo "or your system package manager (Linux), then try again."
+  exit 1
+fi
 
 if [ ! -d ".venv" ]; then
   echo "Setting up (first run only)..."
@@ -22,6 +47,7 @@ if [ ! -d ".venv" ]; then
 fi
 
 source .venv/bin/activate
+echo "Installing dependencies (fast no-op if already installed)..."
 pip install -q -r requirements.txt
 
 export FLASK_DEBUG="${FLASK_DEBUG:-0}"
