@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Cases — {{ app_name }}{% endblock %}
+{% block content %}
+  <h1>Case EV &amp; Risk Overview</h1>
+  <p class="lede">
+    Every figure below is a theoretical, long-run average computed directly from the
+    probabilities and item values in the loaded case data — shown in full underneath each
+    case. Nothing here predicts what any single open will return.
+  </p>
+
+  <section class="import-box">
+    <h2>Import your own case data</h2>
+    <p>Paste JSON in the format described in <a href="/about">About</a> (or shown in
+      <code>data/sample_cases.json</code>), sourced from information a platform has itself
+      published publicly, or from your own account history.</p>
+    <textarea id="importJson" rows="6" placeholder='{"cases": [ { "case_id": "...", "name": "...", "price": 2.5, "currency": "USD", "items": [...] } ]}'></textarea>
+    <button id="importBtn">Validate &amp; Import</button>
+    <div id="importResult"></div>
+  </section>
+
+  <table class="case-table">
+    <thead>
+      <tr>
+        <th>Case</th>
+        <th>Price</th>
+        <th>RTP %</th>
+        <th>Net EV %</th>
+        <th>Risk</th>
+        <th>P(profit on one open)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in analyses %}
+      <tr class="{{ 'row-negative' if a.net_ev < 0 else 'row-positive' }}">
+        <td>{{ a.name }}</td>
+        <td>{{ a.currency }} {{ "%.2f"|format(a.price) }}</td>
+        <td>{{ "%.2f"|format(a.rtp_pct) }}%</td>
+        <td>{{ "%.2f"|format(a.net_ev_pct) }}%</td>
+        <td><span class="risk-badge risk-{{ a.risk_level }}">{{ a.risk_level }}</span></td>
+        <td>{{ "%.3f"|format(a.probability_of_profit * 100) }}%</td>
+        <td><a href="/case/{{ a.case_id }}">Details →</a></td>
+      </tr>
+      {% if a.warnings %}
+      <tr class="warnings-row">
+        <td colspan="7">
+          {% for w in a.warnings %}
+            <div class="warning">⚠️ {{ w }}</div>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('importBtn').addEventListener('click', async () => {
+  const resultEl = document.getElementById('importResult');
+  let payload;
+  try {
+    payload = JSON.parse(document.getElementById('importJson').value);
+  } catch (e) {
+    resultEl.textContent = 'Invalid JSON: ' + e.message;
+    resultEl.className = 'error';
+    return;
+  }
+  const resp = await fetch('/api/cases/import', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await resp.json();
+  if (!resp.ok) {
+    resultEl.textContent = 'Error: ' + (data.error || 'unknown error');
+    resultEl.className = 'error';
+    return;
+  }
+  resultEl.textContent = `Imported: ${data.imported.join(', ') || 'none'}. ` +
+    (data.errors.length ? `Skipped with errors: ${data.errors.join(' | ')}` : '');
+  resultEl.className = 'success';
+  if (data.imported.length) {
+    setTimeout(() => location.reload(), 1200);
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ case.name }} — {{ app_name }}{% endblock %}
+{% block content %}
+  <p><a href="/">← All cases</a></p>
+  <h1>{{ case.name }}</h1>
+  <p class="lede">Price: {{ case.currency }} {{ "%.2f"|format(case.price) }} per open.
+    Source: <code>{{ case.get('source', 'unspecified') }}</code>,
+    last updated {{ case.get('last_updated', 'unspecified') }}.</p>
+
+  {% if analysis.warnings %}
+    <div class="warning-box">
+      {% for w in analysis.warnings %}
+        <div class="warning">⚠️ {{ w }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Expected value received per open</div>
+      <div class="stat-value">{{ case.currency }} {{ "%.4f"|format(analysis.expected_value_per_open) }}</div>
+      <div class="stat-sub">Σ (probability × market value) across all items</div>
+    </div>
+    <div class="stat-card {{ 'negative' if analysis.net_ev < 0 else 'positive' }}">
+      <div class="stat-label">Net EV per open</div>
+      <div class="stat-value">{{ case.currency }} {{ "%.4f"|format(analysis.net_ev) }} ({{ "%.2f"|format(analysis.net_ev_pct) }}%)</div>
+      <div class="stat-sub">Expected value received − case price. Theoretical, not guaranteed.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Return-to-Player (RTP)</div>
+      <div class="stat-value">{{ "%.2f"|format(analysis.rtp_pct) }}%</div>
+      <div class="stat-sub">Expected value received ÷ price</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Std. deviation (risk)</div>
+      <div class="stat-value">{{ case.currency }} {{ "%.2f"|format(analysis.std_dev) }}</div>
+      <div class="stat-sub">Coefficient of variation: {{ "%.2f"|format(analysis.coefficient_of_variation) }}× — risk level: <span class="risk-badge risk-{{ analysis.risk_level }}">{{ analysis.risk_level }}</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">P(profit on a single open)</div>
+      <div class="stat-value">{{ "%.3f"|format(analysis.probability_of_profit * 100) }}%</div>
+      <div class="stat-sub">P(loss) = {{ "%.3f"|format(analysis.probability_of_loss * 100) }}%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Value range</div>
+      <div class="stat-value">{{ "%.2f"|format(analysis.min_possible_value) }} – {{ "%.2f"|format(analysis.max_possible_value) }}</div>
+      <div class="stat-sub">Lowest / highest possible item value</div>
+    </div>
+  </section>
+
+  <h2>Full odds table (every calculation shown)</h2>
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Rarity</th>
+        <th>Probability</th>
+        <th>Market value</th>
+        <th>EV contribution (p × v)</th>
+        <th>Beats price?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in analysis.items %}
+      <tr class="{{ 'row-positive' if i.is_profit else '' }}">
+        <td>{{ i.name }}</td>
+        <td>{{ i.rarity }}</td>
+        <td>{{ "%.4f"|format(i.probability * 100) }}%</td>
+        <td>{{ case.currency }} {{ "%.2f"|format(i.market_value) }}</td>
+        <td>{{ case.currency }} {{ "%.5f"|format(i.ev_contribution) }}</td>
+        <td>{{ "Yes" if i.is_profit else "No" }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td colspan="4">Sum of EV contributions</td>
+        <td>{{ case.currency }} {{ "%.4f"|format(analysis.expected_value_per_open) }}</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <canvas id="probChart" height="90"></canvas>
+
+  <h2>Simulate repeated opens (Monte Carlo)</h2>
+  <p class="lede">
+    This draws random outcomes from the odds table above to show the <em>range</em> of
+    plausible net results over many opens — it is a simulation of your declared odds, not a
+    prediction of real outcomes on any platform.
+  </p>
+  <div class="sim-controls">
+    <label>Number of opens <input type="number" id="simOpens" value="100" min="1" max="1000000"></label>
+    <label>Trials <input type="number" id="simTrials" value="3000" min="100" max="20000"></label>
+    <button id="simBtn">Run simulation</button>
+  </div>
+  <div id="simResult"></div>
+  <canvas id="simChart" height="90"></canvas>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const caseId = {{ case.case_id | tojson }};
+const currency = {{ case.currency | tojson }};
+
+const items = {{ analysis.items | tojson }};
+new Chart(document.getElementById('probChart'), {
+  type: 'bar',
+  data: {
+    labels: items.map(i => i.name),
+    datasets: [{
+      label: 'EV contribution (' + currency + ')',
+      data: items.map(i => i.ev_contribution),
+      backgroundColor: items.map(i => i.is_profit ? '#2f9e44' : '#495057')
+    }]
+  },
+  options: {
+    plugins: { legend: { display: true } },
+    scales: { y: { beginAtZero: true, title: { display: true, text: currency } } }
+  }
+});
+
+let simChart = null;
+document.getElementById('simBtn').addEventListener('click', async () => {
+  const n_opens = parseInt(document.getElementById('simOpens').value, 10);
+  const n_trials = parseInt(document.getElementById('simTrials').value, 10);
+  const resultEl = document.getElementById('simResult');
+  resultEl.textContent = 'Running simulation…';
+
+  const resp = await fetch(`/api/cases/${encodeURIComponent(caseId)}/simulate`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ n_opens, n_trials })
+  });
+  const data = await resp.json();
+  if (!resp.ok) {
+    resultEl.textContent = 'Error: ' + (data.error || 'unknown error');
+    resultEl.className = 'error';
+    return;
+  }
+  resultEl.className = '';
+  resultEl.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Mean net result</div>
+        <div class="stat-value">${currency} ${data.mean_net.toFixed(2)}</div></div>
+      <div class="stat-card"><div class="stat-label">Median net result</div>
+        <div class="stat-value">${currency} ${data.median_net.toFixed(2)}</div></div>
+      <div class="stat-card"><div class="stat-label">P(overall loss)</div>
+        <div class="stat-value">${(data.prob_of_overall_loss * 100).toFixed(1)}%</div></div>
+      <div class="stat-card"><div class="stat-label">Worst / best simulated</div>
+        <div class="stat-value">${currency} ${data.worst_case_net.toFixed(2)} / ${currency} ${data.best_case_net.toFixed(2)}</div></div>
+    </div>
+    <p class="lede">Across ${data.n_trials} simulated sessions of ${data.n_opens} opens each
+      (total spend ${currency} ${data.total_cost.toFixed(2)} per session): 90% of simulated
+      sessions netted between <strong>${currency} ${data.percentile_5.toFixed(2)}</strong> and
+      <strong>${currency} ${data.percentile_95.toFixed(2)}</strong>. This is a spread of
+      possible outcomes, not a forecast.</p>
+  `;
+
+  const ctx = document.getElementById('simChart');
+  const bands = [
+    { label: '5th–95th pct', range: [data.percentile_5, data.percentile_95] },
+    { label: '25th–75th pct', range: [data.percentile_25, data.percentile_75] },
+    { label: 'Median', range: [data.median_net, data.median_net] },
+  ];
+  if (simChart) simChart.destroy();
+  simChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bands.map(b => b.label),
+      datasets: [{
+        label: `Net result range (${currency})`,
+        data: bands.map(b => b.range),
+        backgroundColor: '#4263eb'
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { title: { display: true, text: currency } } }
+    }
+  });
+});
+</script>
+{% endblock %}

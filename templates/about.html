@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}About &amp; Disclaimer — {{ app_name }}{% endblock %}
+{% block content %}
+  <h1>About &amp; Disclaimer</h1>
+
+  <h2>What this tool is</h2>
+  <p>{{ app_name }} is a local, offline statistics and decision-support utility for
+    case-opening / loot-box style products. Given a list of possible items, their
+    probabilities, and their market values for a "case", it computes:</p>
+  <ul>
+    <li>Expected value (EV) and net EV per open</li>
+    <li>Return-to-player (RTP) percentage</li>
+    <li>Variance, standard deviation, and a coefficient-of-variation risk label</li>
+    <li>Probability of profit/loss on a single open</li>
+    <li>Monte Carlo simulated outcome ranges for repeated opens</li>
+    <li>A bankroll/risk-management plan from a budget and a maximum acceptable loss</li>
+    <li>A comparison of your own logged history against the theoretical EV</li>
+  </ul>
+
+  <h2>What this tool is not, and does not do</h2>
+  <ul>
+    <li>It does not scrape, connect to, or automate Skin.Club or any other site.</li>
+    <li>It does not place bets, open cases, deposit, withdraw, or perform any account
+      action anywhere.</li>
+    <li>It does not attempt to predict, influence, or "beat" any random-number generator.</li>
+    <li>It cannot and does not guarantee any win, profit, or specific outcome.</li>
+  </ul>
+
+  <h2>Where case/item data comes from</h2>
+  <p>{{ sourcing_note }}</p>
+  <p>The expected JSON shape for a case:</p>
+  <pre><code>{
+  "cases": [
+    {
+      "case_id": "unique-id",
+      "name": "Display name",
+      "price": 2.50,
+      "currency": "USD",
+      "source": "where you obtained these odds (a public page, your own account export, etc.)",
+      "last_updated": "2026-08-01",
+      "items": [
+        { "name": "Item name", "rarity": "Rarity label", "probability": 0.05, "market_value": 3.20 }
+      ]
+    }
+  ]
+}</code></pre>
+  <p>Item probabilities within a case must sum to 1.0 (small rounding error tolerated).
+    Import via the box on the <a href="/">Cases</a> page, or place a file at
+    <code>data/custom_cases.json</code>.</p>
+
+  <h2>Theoretical EV vs. actual results</h2>
+  <p>Expected value is a <strong>long-run average over infinitely many opens</strong>. Over a
+    small number of opens, actual results (variance) can differ substantially from the
+    theoretical EV in either direction — that is normal and expected, not evidence that the
+    stated odds are wrong. The <a href="/history">History</a> page and the "Simulate" feature
+    on each case page exist specifically to make this gap visible, not to hide it.</p>
+
+  <h2>Full disclaimer</h2>
+  <p>{{ disclaimer }}</p>
+  <p>This tool does not constitute financial, legal, or gambling advice. Loot-box / case-
+    opening mechanics may be regulated as gambling in your jurisdiction; it is your
+    responsibility to confirm you are legally permitted to use such a service before doing
+    so, and to comply with that service's terms of use. If gambling-like spending is
+    becoming a problem, resources such as the National Council on Problem Gambling
+    (ncpgambling.org, US) or BeGambleAware (begambleaware.org, UK) can help.</p>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">📊 {{ app_name }}</a>
+      <nav>
+        <a href="/">Cases</a>
+        <a href="/bankroll">Bankroll Calculator</a>
+        <a href="/history">My History</a>
+        <a href="/about">About &amp; Disclaimer</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="disclaimer-banner">
+    ⚠️ <strong>Not financial or gambling advice. No outcome is guaranteed.</strong>
+    {{ disclaimer }}
+  </div>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p>Local, offline decision-support tool. It does not connect to Skin.Club, place bets, or automate any account action. See <a href="/about">About &amp; Disclaimer</a>.</p>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
