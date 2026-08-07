@@ -1,0 +1,54 @@
+{
+  "_comment": "SAMPLE / DEMO DATA ONLY. These are illustrative case definitions, not scraped or copied from Skin.Club or any live service. Replace this file (or import your own via the dashboard) with odds and prices that a case-opening site has itself published publicly, or with your own account history. See README.md and DISCLAIMER.md for sourcing guidance.",
+  "cases": [
+    {
+      "case_id": "sample-bronze-case",
+      "name": "Sample Bronze Case (demo data)",
+      "price": 2.50,
+      "currency": "USD",
+      "source": "demo",
+      "last_updated": "2026-08-01",
+      "items": [
+        { "name": "Consumer Grade Skin A", "rarity": "Consumer Grade", "probability": 0.7988, "market_value": 0.08 },
+        { "name": "Industrial Grade Skin B", "rarity": "Industrial Grade", "probability": 0.1598, "market_value": 0.35 },
+        { "name": "Mil-Spec Skin C", "rarity": "Mil-Spec", "probability": 0.0320, "market_value": 1.20 },
+        { "name": "Restricted Skin D", "rarity": "Restricted", "probability": 0.0064, "market_value": 6.50 },
+        { "name": "Classified Skin E", "rarity": "Classified", "probability": 0.0024, "market_value": 22.00 },
+        { "name": "Covert Skin F", "rarity": "Covert", "probability": 0.0005, "market_value": 95.00 },
+        { "name": "Rare Special Item G (knife-tier)", "rarity": "Rare Special", "probability": 0.0001, "market_value": 480.00 }
+      ]
+    },
+    {
+      "case_id": "sample-silver-case",
+      "name": "Sample Silver Case (demo data)",
+      "price": 5.00,
+      "currency": "USD",
+      "source": "demo",
+      "last_updated": "2026-08-01",
+      "items": [
+        { "name": "Consumer Grade Skin A2", "rarity": "Consumer Grade", "probability": 0.7692, "market_value": 0.15 },
+        { "name": "Industrial Grade Skin B2", "rarity": "Industrial Grade", "probability": 0.1598, "market_value": 0.60 },
+        { "name": "Mil-Spec Skin C2", "rarity": "Mil-Spec", "probability": 0.0600, "market_value": 2.10 },
+        { "name": "Restricted Skin D2", "rarity": "Restricted", "probability": 0.0080, "market_value": 11.00 },
+        { "name": "Classified Skin E2", "rarity": "Classified", "probability": 0.0025, "market_value": 40.00 },
+        { "name": "Covert Skin F2", "rarity": "Covert", "probability": 0.0004, "market_value": 210.00 },
+        { "name": "Rare Special Item G2 (knife-tier)", "rarity": "Rare Special", "probability": 0.0001, "market_value": 950.00 }
+      ]
+    },
+    {
+      "case_id": "sample-highroller-case",
+      "name": "Sample High-Roller Case (demo data)",
+      "price": 25.00,
+      "currency": "USD",
+      "source": "demo",
+      "last_updated": "2026-08-01",
+      "items": [
+        { "name": "Mil-Spec Skin H", "rarity": "Mil-Spec", "probability": 0.6000, "market_value": 3.00 },
+        { "name": "Restricted Skin I", "rarity": "Restricted", "probability": 0.3000, "market_value": 9.00 },
+        { "name": "Classified Skin J", "rarity": "Classified", "probability": 0.0800, "market_value": 45.00 },
+        { "name": "Covert Skin K", "rarity": "Covert", "probability": 0.0180, "market_value": 260.00 },
+        { "name": "Rare Special Item L (knife-tier)", "rarity": "Rare Special", "probability": 0.0020, "market_value": 1400.00 }
+      ]
+    }
+  ]
+}

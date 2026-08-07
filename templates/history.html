@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}My History — {{ app_name }}{% endblock %}
+{% block content %}
+  <h1>My Opening History</h1>
+  <p class="lede">
+    Log opens you have <em>already</em> made, using your own records (e.g. exported from
+    your own account history). This tool does not fetch this data for you. Comparing your
+    actual results to the theoretical EV shows how much short-run luck (variance) can differ
+    from the long-run average — a single history is not enough data to prove or disprove the
+    theoretical EV either way.
+  </p>
+
+  <form id="historyForm" class="form-grid">
+    <label>Date
+      <input type="date" name="date" id="date" value="{{ today }}" required>
+    </label>
+    <label>Case
+      <select name="case_id" id="case_id">
+        {% for c in cases %}
+          <option value="{{ c.case_id }}">{{ c.name }} ({{ c.currency }} {{ "%.2f"|format(c.price) }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Item received
+      <input type="text" name="item_name" id="item_name" required>
+    </label>
+    <label>Item market value
+      <input type="number" step="0.01" min="0" name="item_value" id="item_value" required>
+    </label>
+    <button type="submit">Add entry</button>
+  </form>
+  <div id="addResult"></div>
+
+  <h2>Summary (all cases combined)</h2>
+  <section class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Opens logged</div><div class="stat-value">{{ summary.n_opens }}</div></div>
+    <div class="stat-card"><div class="stat-label">Total spent</div><div class="stat-value">{{ "%.2f"|format(summary.total_spent) }}</div></div>
+    <div class="stat-card"><div class="stat-label">Total received (market value)</div><div class="stat-value">{{ "%.2f"|format(summary.total_received) }}</div></div>
+    <div class="stat-card {{ 'negative' if summary.net_actual < 0 else 'positive' }}">
+      <div class="stat-label">Net actual</div>
+      <div class="stat-value">{{ "%.2f"|format(summary.net_actual) }} ({{ "%.2f"|format(summary.actual_roi_pct) }}% ROI)</div>
+    </div>
+  </section>
+  <p class="lede">
+    Note: this summary combines all cases in your log at their respective prices. For a
+    theory-vs-actual comparison on a single case, use the API endpoint
+    <code>/api/history?case_id=...</code>, which also returns the theoretical EV over the
+    same number of opens.
+  </p>
+
+  <h2>Logged entries</h2>
+  <table class="items-table">
+    <thead><tr><th>Date</th><th>Case</th><th>Price paid</th><th>Item</th><th>Value received</th><th>Net</th></tr></thead>
+    <tbody>
+      {% for e in summary.entries %}
+      <tr class="{{ 'row-positive' if e.item_value > e.case_price else '' }}">
+        <td>{{ e.date }}</td>
+        <td>{{ e.case_id }}</td>
+        <td>{{ "%.2f"|format(e.case_price) }}</td>
+        <td>{{ e.item_name }}</td>
+        <td>{{ "%.2f"|format(e.item_value) }}</td>
+        <td>{{ "%.2f"|format(e.item_value - e.case_price) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No entries yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('historyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    date: document.getElementById('date').value,
+    case_id: document.getElementById('case_id').value,
+    item_name: document.getElementById('item_name').value,
+    item_value: parseFloat(document.getElementById('item_value').value),
+  };
+  const resp = await fetch('/api/history', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  const resultEl = document.getElementById('addResult');
+  if (!resp.ok) {
+    resultEl.innerHTML = `<div class="warning">⚠️ ${data.error}</div>`;
+    return;
+  }
+  resultEl.innerHTML = `<div class="success">Recorded. Reloading…</div>`;
+  setTimeout(() => location.reload(), 700);
+});
+</script>
+{% endblock %}
